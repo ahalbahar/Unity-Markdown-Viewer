@@ -62,6 +62,7 @@ jobs:
             --exclude='./tools' \
             --exclude='./CONTRIBUTING.md' \
             --exclude='./CONTRIBUTING.md.meta' \
+            --exclude='./act-artifacts' \
             --exclude='./staging' \
             --exclude='./dist' \
             -cf - . | tar -xf - -C "${PACKAGE_ROOT}"
@@ -129,14 +130,33 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          VERSION_RAW="${VERSION#v}"
 
-          awk "/## \\[${VERSION#v}\\]/,/^## \\[/{if(/^## \\[/ && !/## \\[${VERSION#v}\\]/) exit; print}" CHANGELOG.md > release_notes.txt
-
-          if [ ! -s release_notes.txt ]; then
-            echo "Release ${VERSION} of Unity Markdown Viewer" > release_notes.txt
-            echo "" >> release_notes.txt
-            echo "See CHANGELOG.md for full details." >> release_notes.txt
-          fi
+          # CHANGED: Extract the full version section from the changelog, including the version header and date (2026-04-11)
+          {
+            awk "/## \[${VERSION_RAW}\]/, /^## / {
+                if (/^## / && !/## \[${VERSION_RAW}\]/) exit;
+                print;
+            }" CHANGELOG.md > notes_content.txt
+            
+            if [ -s notes_content.txt ]; then
+              # CHANGED: Wrap the release notes in a GitHub collapsible section for better readability (2026-04-11)
+              echo "<details>"
+              echo "<summary><b>Click to expand full release notes</b></summary>"
+              echo ""
+              cat notes_content.txt | sed '/./,$!d'
+              echo ""
+              echo "</details>"
+            else
+              echo "## ${VERSION}"
+              echo ""
+              echo "Release notes for ${VERSION} of Unity Markdown Viewer."
+            fi
+            
+            echo ""
+            echo "---"
+            echo "**Full Changelog**: [See CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)"
+          } > release_notes.txt
 
       - name: Create GitHub release
         # CHANGED: Manual runs should rebuild artifacts without publishing a duplicate release entry (2026-04-11)

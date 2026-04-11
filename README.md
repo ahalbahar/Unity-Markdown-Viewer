@@ -74,7 +74,9 @@ If you are searching for a Unity markdown plugin, Unity markdown renderer, or Un
 2. Drag it into your Unity project, or use **Assets > Import Package > Custom Package**
 3. Select any `.md` or `.markdown` file to view it
 
-### Option 2: Unity Package Manager (Git URL)
+<details>
+<summary><b>Option 2: Unity Package Manager (Git URL)</b></summary>
+
 1. Open **Window > Package Manager**
 2. Click the **+** button
 3. Choose **Add package from git URL...**
@@ -93,14 +95,18 @@ You can also add it directly in `Packages/manifest.json`:
 ```
 
 When installed through Package Manager, the package lives under `Packages/com.ab.unitymarkdownviewer`. The editable `MarkdownTheme` asset is created automatically under `Assets/AB/Unity-Markdown-Viewer/Theme`, so project-specific theme changes stay writable.
+</details>
 
-### Option 3: Direct Folder
+<details>
+<summary><b>Option 3: Direct Folder (Manual Clone)</b></summary>
+
 1. Clone or download this repository
 2. Create `Assets/AB/Unity-Markdown-Viewer` in your Unity project
 3. Copy this repository's package contents into that folder:
    `Scripts/AB.MDV.asmdef`, `Scripts/`, `Theme/`, `Sample/`, `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE.md`, and `package.json`
 4. Unity automatically imports the custom editor
 5. Select any `.md` or `.markdown` file to view it in the Inspector
+</details>
 
 ## Release Packaging
 
@@ -142,7 +148,8 @@ This makes the package useful as a Unity README viewer, Unity changelog viewer, 
 5. The Project Settings page shows the active theme asset and keeps edits in sync with the asset inspector
 6. The same theme asset also contains the emoji fallback source chain used only by Unity versions older than Unity 6
 
-### Emoji Source Chain
+<details>
+<summary><b>Emoji Source Chain Configuration</b></summary>
 
 The `MarkdownTheme` asset includes an **Emoji Fallback Sources (Unity Versions Older Than Unity 6)** section. This is used only on Unity versions older than Unity 6, where IMGUI cannot render full-color emoji reliably.
 
@@ -166,6 +173,7 @@ Recommended ordering:
 - put grapheme-aware providers first
 - put codepoint-based providers after them
 - keep the broadest and most reliable source at the top of the list
+</details>
 
 ### Writing Markdown
 
@@ -222,6 +230,9 @@ Unity 6 renders emoji through the editor's native text system. Unity versions ol
 
 ## Architecture
 
+<details>
+<summary><b>Project File Structure</b></summary>
+
 ```
 Assets/AB/Unity-Markdown-Viewer/
 ├── Scripts/
@@ -237,6 +248,7 @@ Assets/AB/Unity-Markdown-Viewer/
 ├── Sample/                            # Example markdown files
 └── README.md                          # Documentation
 ```
+</details>
 
 ## Compatibility
 
@@ -282,6 +294,9 @@ Edit `SyntaxHighlighter.cs` to add new language patterns or color schemes.
 
 ## Troubleshooting
 
+<details>
+<summary><b>Troubleshooting Guide</b></summary>
+
 | Issue | Solution |
 |-------|----------|
 | Markdown doesn't display | Ensure file extension is `.md` or `.markdown` |
@@ -290,6 +305,7 @@ Edit `SyntaxHighlighter.cs` to add new language patterns or color schemes.
 | Anchor links don't scroll | Ensure heading has proper ID (auto-generated or `{#id}`) |
 | Theme colors wrong | Open **Project Settings > AB > Markdown Viewer** and verify the active `MarkdownTheme` asset |
 | Text is tiny | Adjust zoom in Editor Preferences or theme font sizes |
+</details>
 
 ## Contributing
 
