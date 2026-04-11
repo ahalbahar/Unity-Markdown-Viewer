@@ -1,0 +1,98 @@
+name: Release Unity Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Extract version from tag
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            VERSION="manual-${GITHUB_RUN_NUMBER}"
+          fi
+
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "version_number=${VERSION#v}" >> "${GITHUB_OUTPUT}"
+
+      - name: Stage package contents
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          STAGING_ROOT="staging"
+          PACKAGE_ROOT="${STAGING_ROOT}/Assets/AB/Unity-Markdown-Viewer"
+
+          rm -rf "${STAGING_ROOT}" dist
+          mkdir -p "${PACKAGE_ROOT}" dist
+
+          rsync -a ./ "${PACKAGE_ROOT}/" \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'PackageBuilds/' \
+            --exclude 'tools/' \
+            --exclude 'CONTRIBUTING.md' \
+            --exclude 'CONTRIBUTING.md.meta' \
+            --exclude 'staging/' \
+            --exclude 'dist/'
+
+      - name: Create unitypackage
+        uses: natsuneko-laboratory/create-unitypackage@v3
+        with:
+          root: staging
+          files-glob: |
+            ./Assets/AB/Unity-Markdown-Viewer/**
+          respect-gitignore: false
+          dest: dist/Unity-Markdown-Viewer-${{ steps.version.outputs.version }}.unitypackage
+
+      - name: Verify exported package
+        shell: bash
+        run: |
+          test -f "dist/Unity-Markdown-Viewer-${{ steps.version.outputs.version }}.unitypackage"
+
+      - name: Create release notes
+        id: release_notes
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          awk "/## \\[${VERSION#v}\\]/,/^## \\[/{if(/^## \\[/ && !/## \\[${VERSION#v}\\]/) exit; print}" CHANGELOG.md > release_notes.txt
+
+          if [ ! -s release_notes.txt ]; then
+            echo "Release ${VERSION} of Unity Markdown Viewer" > release_notes.txt
+            echo "" >> release_notes.txt
+            echo "See CHANGELOG.md for full details." >> release_notes.txt
+          fi
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/Unity-Markdown-Viewer-${{ steps.version.outputs.version }}.unitypackage
+          body_path: release_notes.txt
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity-Markdown-Viewer-${{ steps.version.outputs.version }}
+          path: dist/Unity-Markdown-Viewer-${{ steps.version.outputs.version }}.unitypackage
+          retention-days: 30

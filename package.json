@@ -1,0 +1,35 @@
+{
+  "schema": "ab-package",
+  "schemaVersion": "1",
+  "name": "com.ab.unitymarkdownviewer",
+  "version": "1.0.0",
+  "displayName": "Unity Markdown Viewer",
+  "description": "View Markdown files directly in the Unity Editor Inspector with syntax highlighting, theme presets, anchor navigation, tables, images, GIF support, and project settings integration.",
+  "author": {
+    "name": "Ahmad Albahar / AB Studios",
+    "url": "https://github.com/ahalbahar/Unity-Markdown-Viewer"
+  },
+  "license": "MIT",
+  "unity": "2021.3",
+  "installPath": "Assets/AB/Unity-Markdown-Viewer",
+  "changelog": "CHANGELOG.md",
+  "category": "Tools",
+  "documentationUrl": "https://github.com/ahalbahar/Unity-Markdown-Viewer",
+  "keywords": [
+    "ab",
+    "unity",
+    "markdown",
+    "viewer",
+    "inspector",
+    "editor",
+    "documentation",
+    "readme",
+    "changelog",
+    "md",
+    ".md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ahalbahar/Unity-Markdown-Viewer.git"
+  }
+}
