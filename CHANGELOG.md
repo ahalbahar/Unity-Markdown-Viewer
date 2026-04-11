@@ -72,6 +72,7 @@ This is a **complete rewrite** of the original [UnityMarkdownViewer](https://git
 ### Packaging
 
 - **Release workflow** – GitHub Actions stages the repository into `Assets/AB/Unity-Markdown-Viewer` and uses `natsuneko-laboratory/create-unitypackage@v3` to build the `.unitypackage`
+- **Node 24 ready workflow** – The release action now opts JavaScript actions into Node 24 ahead of the GitHub runner deprecation window
 - **Manual package rebuilds** – The same workflow supports `workflow_dispatch`, so package artifacts can be regenerated without pushing a new tag
 - **Curated package contents** – The release package excludes repository-only folders such as `.github`, `tools`, `PackageBuilds`, `CODE_QUALITY_FINDINGS.md`, and `CONTRIBUTING.md`
 - **Package Manager theme fallback** – Default theme asset creation supports Package Manager installs by creating the writable theme asset under `Assets/AB/Unity-Markdown-Viewer/Theme` when the package itself lives under `Packages/`

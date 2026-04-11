@@ -98,7 +98,7 @@ When installed through Package Manager, the package lives under `Packages/com.ab
 1. Clone or download this repository
 2. Create `Assets/AB/Unity-Markdown-Viewer` in your Unity project
 3. Copy this repository's package contents into that folder:
-   `AB.MDV.asmdef`, `Scripts/`, `Theme/`, `Sample/`, `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE.md`, and `package.json`
+   `Scripts/AB.MDV.asmdef`, `Scripts/`, `Theme/`, `Sample/`, `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `LICENSE.md`, and `package.json`
 4. Unity automatically imports the custom editor
 5. Select any `.md` or `.markdown` file to view it in the Inspector
 
@@ -112,7 +112,7 @@ Release workflow behavior:
 - manual runs can optionally set a version label; otherwise the artifact is named with `manual-<run number>`
 
 The staged export intentionally includes only the Unity plugin payload:
-`AB.MDV.asmdef`, `Scripts/`, `Theme/`, `Sample/`, `README.md`, `CHANGELOG.md`, and `LICENSE.md`.
+`Scripts/`, `Theme/`, `Sample/`, `README.md`, `CHANGELOG.md`, `LICENSE.md`, and `package.json`.
 
 ## Usage
 

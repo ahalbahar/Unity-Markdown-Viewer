@@ -173,7 +173,7 @@ Workflow behavior:
 - a manual `workflow_dispatch` run rebuilds the package and uploads it as a workflow artifact without requiring another tag
 - manual runs can provide an optional version label; otherwise the artifact uses a `manual-<run number>` suffix
 
-The release package intentionally excludes repository-only content such as `.github/`, `tools/`, `PackageBuilds/`, `CODE_QUALITY_FINDINGS.md`, and `CONTRIBUTING.md`.
+The release package intentionally includes only `Scripts/`, `Theme/`, `Sample/`, `README.md`, `CHANGELOG.md`, `LICENSE.md`, and `package.json`, while excluding repository-only content such as `.github/`, `tools/`, `PackageBuilds/`, and `CONTRIBUTING.md`.
 
 ## Commit Message Guidelines
 

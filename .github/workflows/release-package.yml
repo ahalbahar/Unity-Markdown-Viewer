@@ -1,5 +1,8 @@
 name: Release Unity Package
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     tags:
@@ -51,22 +54,69 @@ jobs:
           rm -rf "${STAGING_ROOT}" dist
           mkdir -p "${PACKAGE_ROOT}" dist
 
-          rsync -a ./ "${PACKAGE_ROOT}/" \
-            --exclude '.git/' \
-            --exclude '.github/' \
-            --exclude 'PackageBuilds/' \
-            --exclude 'tools/' \
-            --exclude 'CONTRIBUTING.md' \
-            --exclude 'CONTRIBUTING.md.meta' \
-            --exclude 'staging/' \
-            --exclude 'dist/'
+          # CHANGED: Replace rsync with portable tar staging so local act runs do not depend on extra packages in the runner image (2026-04-11)
+          tar \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./PackageBuilds' \
+            --exclude='./tools' \
+            --exclude='./CONTRIBUTING.md' \
+            --exclude='./CONTRIBUTING.md.meta' \
+            --exclude='./staging' \
+            --exclude='./dist' \
+            -cf - . | tar -xf - -C "${PACKAGE_ROOT}"
+
+          ensure_folder_meta() {
+            local folder_path="$1"
+            local meta_path="${folder_path}.meta"
+
+            if [[ -f "${meta_path}" ]]; then
+              return
+            fi
+
+            local guid
+            guid="$(printf 'Unity-Markdown-Viewer:%s' "${folder_path}" | md5sum | awk '{print $1}')"
+
+            printf '%s\n' \
+              'fileFormatVersion: 2' \
+              "guid: ${guid}" \
+              'folderAsset: yes' \
+              'DefaultImporter:' \
+              '  externalObjects: {}' \
+              '  userData:' \
+              '  assetBundleName:' \
+              '  assetBundleVariant:' > "${meta_path}"
+          }
+
+          # CHANGED: Create deterministic folder meta files for the staged Unity folder chain because the repository root itself is not a Unity asset folder with committed metas (2026-04-11)
+          mkdir -p "${STAGING_ROOT}/Assets/AB"
+          ensure_folder_meta "${STAGING_ROOT}/Assets"
+          ensure_folder_meta "${STAGING_ROOT}/Assets/AB"
+          ensure_folder_meta "${PACKAGE_ROOT}"
+
+      - name: Collect staged package files
+        id: staged_files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # CHANGED: Feed the action explicit staged file paths because its files-glob input resolves from the workflow cwd instead of the declared root (2026-04-11)
+          {
+            echo 'files<<EOF'
+            find staging/Assets/AB/Unity-Markdown-Viewer \
+              -type f \
+              ! -name '*.meta' \
+              ! -name 'CONTRIBUTING.md' \
+              ! -name 'CODE_QUALITY_FINDINGS.md' | sort
+            echo 'EOF'
+          } >> "${GITHUB_OUTPUT}"
 
       - name: Create unitypackage
-        uses: natsuneko-laboratory/create-unitypackage@v3
+        # CHANGED: Pin to the latest published create-unitypackage release so CI matches the current action behavior (2026-04-11)
+        uses: natsuneko-laboratory/create-unitypackage@v3.2.0
         with:
           root: staging
-          # CHANGED: Use the action's supported glob input format so staged package files are discovered reliably (2026-04-11)
-          files-glob: Assets/AB/Unity-Markdown-Viewer/**
+          files: ${{ steps.staged_files.outputs.files }}
           dest: dist/Unity-Markdown-Viewer-${{ steps.version.outputs.version }}.unitypackage
 
       - name: Verify exported package
