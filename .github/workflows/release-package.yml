@@ -34,10 +34,12 @@ jobs:
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             VERSION="${GITHUB_REF#refs/tags/}"
           elif [[ -n "${{ github.event.inputs.version }}" ]]; then
-            # CHANGED: Allow manual rebuilds to set a stable artifact version without pushing a new tag (2026-04-11)
-            VERSION="${{ github.event.inputs.version }}"
+            # Normalize: ensure the version always carries a v prefix
+            RAW="${{ github.event.inputs.version }}"
+            VERSION="${RAW#v}"
+            VERSION="v${VERSION}"
           else
-            # CHANGED: Auto-detect the latest version from CHANGELOG if no version is provided in a manual run (2026-04-11)
+            # Auto-detect the latest version from CHANGELOG if no version is provided in a manual run
             LATEST_VERSION_RAW=$(grep -m 1 '## \[' CHANGELOG.md | sed -E 's/.*\[([^]]+)\].*/\1/')
             if [[ -n "${LATEST_VERSION_RAW}" ]]; then
                VERSION="v${LATEST_VERSION_RAW}"
@@ -48,7 +50,6 @@ jobs:
           fi
 
           echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
-          echo "version_number=${VERSION#v}" >> "${GITHUB_OUTPUT}"
 
       - name: Stage package contents
         shell: bash
@@ -175,10 +176,12 @@ jobs:
           cat release_notes.txt
 
       - name: Create GitHub release
-        # CHANGED: Allow both tag pushes and manual workflow runs to publish/update a release (2026-04-11)
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        # Only runs on tag pushes — GitHub Releases always requires an existing tag
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Unity Markdown Viewer ${{ steps.version.outputs.version }}
           files: dist/Unity-Markdown-Viewer-${{ steps.version.outputs.version }}.unitypackage
           body_path: release_notes.txt
           draft: false
