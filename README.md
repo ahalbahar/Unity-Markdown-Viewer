@@ -106,6 +106,11 @@ When installed through Package Manager, the package lives under `Packages/com.ab
 
 GitHub Releases are built without Unity. The release workflow stages the repository contents into `Assets/AB/Unity-Markdown-Viewer` and uses [`natsuneko-laboratory/create-unitypackage@v3`](https://github.com/marketplace/actions/create-a-unitypackage) to generate the published `.unitypackage`.
 
+Release workflow behavior:
+- pushing a `v*` tag builds the package, uploads the artifact, and publishes the GitHub Release
+- running **Actions > Release Unity Package > Run workflow** builds the package again without needing a new tag and uploads it as a workflow artifact
+- manual runs can optionally set a version label; otherwise the artifact is named with `manual-<run number>`
+
 The staged export intentionally includes only the Unity plugin payload:
 `AB.MDV.asmdef`, `Scripts/`, `Theme/`, `Sample/`, `README.md`, `CHANGELOG.md`, and `LICENSE.md`.
 

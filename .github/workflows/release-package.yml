@@ -5,6 +5,12 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Optional version label for manual package builds'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   build-package:
@@ -24,6 +30,9 @@ jobs:
         run: |
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
             VERSION="${GITHUB_REF#refs/tags/}"
+          elif [[ -n "${{ github.event.inputs.version }}" ]]; then
+            # CHANGED: Allow manual rebuilds to set a stable artifact version without pushing a new tag (2026-04-11)
+            VERSION="${{ github.event.inputs.version }}"
           else
             VERSION="manual-${GITHUB_RUN_NUMBER}"
           fi
@@ -56,9 +65,8 @@ jobs:
         uses: natsuneko-laboratory/create-unitypackage@v3
         with:
           root: staging
-          files-glob: |
-            ./Assets/AB/Unity-Markdown-Viewer/**
-          respect-gitignore: false
+          # CHANGED: Use the action's supported glob input format so staged package files are discovered reliably (2026-04-11)
+          files-glob: Assets/AB/Unity-Markdown-Viewer/**
           dest: dist/Unity-Markdown-Viewer-${{ steps.version.outputs.version }}.unitypackage
 
       - name: Verify exported package
@@ -81,6 +89,8 @@ jobs:
           fi
 
       - name: Create GitHub release
+        # CHANGED: Manual runs should rebuild artifacts without publishing a duplicate release entry (2026-04-11)
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: dist/Unity-Markdown-Viewer-${{ steps.version.outputs.version }}.unitypackage

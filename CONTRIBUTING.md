@@ -168,6 +168,11 @@ Assets/AB/Unity-Markdown-Viewer/
 
 Tagged releases are packaged in GitHub Actions without Unity. The workflow stages the repository contents into `Assets/AB/Unity-Markdown-Viewer` and runs `natsuneko-laboratory/create-unitypackage@v3` to create the release `.unitypackage`.
 
+Workflow behavior:
+- pushing a `v*` tag builds the package, uploads the artifact, and creates the GitHub Release
+- a manual `workflow_dispatch` run rebuilds the package and uploads it as a workflow artifact without requiring another tag
+- manual runs can provide an optional version label; otherwise the artifact uses a `manual-<run number>` suffix
+
 The release package intentionally excludes repository-only content such as `.github/`, `tools/`, `PackageBuilds/`, `CODE_QUALITY_FINDINGS.md`, and `CONTRIBUTING.md`.
 
 ## Commit Message Guidelines
