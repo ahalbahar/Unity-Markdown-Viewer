@@ -37,7 +37,14 @@ jobs:
             # CHANGED: Allow manual rebuilds to set a stable artifact version without pushing a new tag (2026-04-11)
             VERSION="${{ github.event.inputs.version }}"
           else
-            VERSION="manual-${GITHUB_RUN_NUMBER}"
+            # CHANGED: Auto-detect the latest version from CHANGELOG if no version is provided in a manual run (2026-04-11)
+            LATEST_VERSION_RAW=$(grep -m 1 '## \[' CHANGELOG.md | sed -E 's/.*\[([^]]+)\].*/\1/')
+            if [[ -n "${LATEST_VERSION_RAW}" ]]; then
+               VERSION="v${LATEST_VERSION_RAW}"
+               echo "Auto-detected latest version ${VERSION} from CHANGELOG"
+            else
+               VERSION="manual-${GITHUB_RUN_NUMBER}"
+            fi
           fi
 
           echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
@@ -133,24 +140,24 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           VERSION_RAW="${VERSION#v}"
-          SEARCH_HEADER="## [${VERSION_RAW}]"
 
-          # CHANGED: Use literal string matching in awk to avoid regex escaping issues with version brackets (2026-04-11)
-          # Also log the output to the workflow run for easier debugging
+          # Extract section body (skip the header line itself, stop at next H2)
+          awk -v ver="## [${VERSION_RAW}]" '
+            index($0, ver) == 1 { p=1; next }
+            p && /^## / { exit }
+            p { print }
+          ' CHANGELOG.md \
+            | sed -e '/./,$!d' -e :a -e '/^\s*$/{$d;N;ba}' \
+            | grep -v '^---$' \
+            > notes_content.txt
+
           {
-            awk -v header="${SEARCH_HEADER}" '
-              index($0, header) == 1, /^## / {
-                if (/^## / && index($0, header) != 1) exit;
-                print;
-              }
-            ' CHANGELOG.md > notes_content.txt
-            
             if [ -s notes_content.txt ]; then
-              # Wrap in details block for GitHub UI
+              # Wrap body in a collapsible details block for GitHub UI
               echo "<details>"
-              echo "<summary><b>Click to expand full release notes</b></summary>"
+              echo "<summary><b>Unity Markdown Viewer ${VERSION} — Click to expand release notes</b></summary>"
               echo ""
-              cat notes_content.txt | sed '/./,$!d'
+              cat notes_content.txt
               echo ""
               echo "</details>"
             else
@@ -158,7 +165,7 @@ jobs:
               echo ""
               echo "Release notes for ${VERSION} of Unity Markdown Viewer."
             fi
-            
+
             echo ""
             echo "---"
             echo "**Full Changelog**: [See CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)"
@@ -168,8 +175,8 @@ jobs:
           cat release_notes.txt
 
       - name: Create GitHub release
-        # CHANGED: Manual runs should rebuild artifacts without publishing a duplicate release entry (2026-04-11)
-        if: startsWith(github.ref, 'refs/tags/')
+        # CHANGED: Allow both tag pushes and manual workflow runs to publish/update a release (2026-04-11)
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
           files: dist/Unity-Markdown-Viewer-${{ steps.version.outputs.version }}.unitypackage
