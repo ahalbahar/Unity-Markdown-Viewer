@@ -62,6 +62,8 @@ jobs:
             --exclude='./tools' \
             --exclude='./CONTRIBUTING.md' \
             --exclude='./CONTRIBUTING.md.meta' \
+            --exclude='./CODE_QUALITY_FINDINGS.md' \
+            --exclude='./CODE_QUALITY_FINDINGS.md.meta' \
             --exclude='./act-artifacts' \
             --exclude='./staging' \
             --exclude='./dist' \
@@ -131,16 +133,20 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           VERSION_RAW="${VERSION#v}"
+          SEARCH_HEADER="## [${VERSION_RAW}]"
 
-          # CHANGED: Extract the full version section from the changelog, including the version header and date (2026-04-11)
+          # CHANGED: Use literal string matching in awk to avoid regex escaping issues with version brackets (2026-04-11)
+          # Also log the output to the workflow run for easier debugging
           {
-            awk "/## \[${VERSION_RAW}\]/, /^## / {
-                if (/^## / && !/## \[${VERSION_RAW}\]/) exit;
+            awk -v header="${SEARCH_HEADER}" '
+              index($0, header) == 1, /^## / {
+                if (/^## / && index($0, header) != 1) exit;
                 print;
-            }" CHANGELOG.md > notes_content.txt
+              }
+            ' CHANGELOG.md > notes_content.txt
             
             if [ -s notes_content.txt ]; then
-              # CHANGED: Wrap the release notes in a GitHub collapsible section for better readability (2026-04-11)
+              # Wrap in details block for GitHub UI
               echo "<details>"
               echo "<summary><b>Click to expand full release notes</b></summary>"
               echo ""
@@ -157,6 +163,9 @@ jobs:
             echo "---"
             echo "**Full Changelog**: [See CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)"
           } > release_notes.txt
+
+          echo "Generated Release Notes:"
+          cat release_notes.txt
 
       - name: Create GitHub release
         # CHANGED: Manual runs should rebuild artifacts without publishing a duplicate release entry (2026-04-11)
