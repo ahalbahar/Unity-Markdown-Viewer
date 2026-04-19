@@ -73,6 +73,13 @@ namespace AB.MDV.Layout
         public Texture FetchImage(string url) => mImages.FetchImage(url);
 
         /// <summary>
+        /// Fetches an image texture using a logical image request with fallback candidates.
+        /// </summary>
+        /// <param name="request">The logical image request.</param>
+        /// <returns>The texture if available; otherwise, a placeholder.</returns>
+        public Texture FetchImage(MarkdownImageRequest request) => mImages.FetchImage(request);
+
+        /// <summary>
         /// Resets the context to the default style.
         /// </summary>
         public void Reset() => Apply(Style.Default);

@@ -32,6 +32,14 @@ namespace AB.MDV.Layout
         void Image(string url, string alt, string tooltip, int width = 0, int height = 0);
 
         /// <summary>
+        /// Adds a Mermaid diagram block to the layout.
+        /// </summary>
+        /// <param name="imageRequest">The themed render request.</param>
+        /// <param name="source">The raw Mermaid source.</param>
+        /// <param name="title">The display title.</param>
+        void Diagram(MarkdownImageRequest imageRequest, string source, string title);
+
+        /// <summary>
         /// Inserts a line break within the current content block.
         /// </summary>
         void NewLine();

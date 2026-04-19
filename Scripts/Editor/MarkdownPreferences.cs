@@ -5,11 +5,28 @@
 // ============================================================
 
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
 namespace AB.MDV
 {
+    /// <summary>
+    /// Selects where Mermaid diagram images are cached on disk.
+    /// </summary>
+    public enum MermaidCacheStorageLocation
+    {
+        /// <summary>
+        /// Stores cached diagrams under the Unity project's Library folder.
+        /// </summary>
+        Library,
+
+        /// <summary>
+        /// Stores cached diagrams under the Unity project's Temp folder.
+        /// </summary>
+        Temp,
+    }
+
     /// <summary>
     /// Manages editor-wide preferences for the Markdown viewer.
     /// Provides a settings provider in the Unity Preferences window.
@@ -21,6 +38,8 @@ namespace AB.MDV
         private static readonly string KeyPipedTablesRequireHeaderSeparator = "AB/MDV/PIPED/USEHSEP";
         private static readonly string KeyHTML = "AB/MDV/HTML";
         private static readonly string KeyDarkSkin = "AB/MDV/DarkSkin";
+        private static readonly string KeyMermaidDiskCacheEnabled = "AB/MDV/MERMAID/DISK_CACHE";
+        private static readonly string KeyMermaidDiskCacheLocation = "AB/MDV/MERMAID/DISK_CACHE_LOCATION";
 
         private static string mJIRA = string.Empty;
         private static bool mPipedTables = true;
@@ -28,6 +47,8 @@ namespace AB.MDV
         private static bool mStripHTML = true;
         private static bool mPrefsLoaded = false;
         private static bool mDarkSkin = EditorGUIUtility.isProSkin;
+        private static bool mMermaidDiskCacheEnabled = true;
+        private static MermaidCacheStorageLocation mMermaidDiskCacheLocation = MermaidCacheStorageLocation.Library;
         private static Editor sThemeEditor;
 
         /// <summary>
@@ -60,6 +81,31 @@ namespace AB.MDV
         /// </summary>
         public static MarkdownTheme ActiveTheme => MarkdownTheme.Instance;
 
+        /// <summary>
+        /// Gets a value indicating whether Mermaid diagrams should be cached on disk.
+        /// </summary>
+        public static bool MermaidDiskCacheEnabled { get { LoadPrefs(); return mMermaidDiskCacheEnabled; } }
+
+        /// <summary>
+        /// Gets the selected Mermaid disk cache storage location.
+        /// </summary>
+        public static MermaidCacheStorageLocation MermaidDiskCacheLocation { get { LoadPrefs(); return mMermaidDiskCacheLocation; } }
+
+        /// <summary>
+        /// Gets the resolved Mermaid diagram cache directory inside the current Unity project.
+        /// </summary>
+        public static string MermaidDiskCacheDirectory
+        {
+            get
+            {
+                LoadPrefs();
+
+                string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+                string rootFolder = mMermaidDiskCacheLocation == MermaidCacheStorageLocation.Temp ? "Temp" : "Library";
+                return Path.Combine(projectRoot, rootFolder, "AB", "Unity-Markdown-Viewer", "DiagramCache");
+            }
+        }
+
         private static void LoadPrefs()
         {
             if (!mPrefsLoaded)
@@ -69,6 +115,11 @@ namespace AB.MDV
                 mPipedTables = EditorPrefs.GetBool(KeyPipedTables, true);
                 mPipedTablesRequireHeaderSeparator = EditorPrefs.GetBool(KeyPipedTablesRequireHeaderSeparator, true);
                 mDarkSkin = EditorPrefs.GetBool(KeyDarkSkin, EditorGUIUtility.isProSkin);
+                mMermaidDiskCacheEnabled = EditorPrefs.GetBool(KeyMermaidDiskCacheEnabled, true);
+                int locationValue = EditorPrefs.GetInt(KeyMermaidDiskCacheLocation, (int)MermaidCacheStorageLocation.Library);
+                mMermaidDiskCacheLocation = System.Enum.IsDefined(typeof(MermaidCacheStorageLocation), locationValue)
+                    ? (MermaidCacheStorageLocation)locationValue
+                    : MermaidCacheStorageLocation.Library;
 
                 mPrefsLoaded = true;
             }
@@ -162,6 +213,17 @@ namespace AB.MDV
                 EditorGUIUtility.PingObject(MarkdownTheme.Instance);
             }
 
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Mermaid Diagrams", EditorStyles.boldLabel);
+            // CHANGED: Mermaid rendering now supports persistent disk caching with a configurable project-local storage folder.
+            mMermaidDiskCacheEnabled = EditorGUILayout.Toggle("Enable Disk Cache", mMermaidDiskCacheEnabled);
+            mMermaidDiskCacheLocation = (MermaidCacheStorageLocation)EditorGUILayout.EnumPopup("Cache Location", mMermaidDiskCacheLocation);
+
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.TextField("Cache Folder", MermaidDiskCacheDirectory);
+            }
+
             if (EditorGUI.EndChangeCheck())
             {
                 EditorPrefs.SetString(KeyJIRA, mJIRA);
@@ -169,6 +231,8 @@ namespace AB.MDV
                 EditorPrefs.SetBool(KeyDarkSkin, mDarkSkin);
                 EditorPrefs.SetBool(KeyPipedTables, mPipedTables);
                 EditorPrefs.SetBool(KeyPipedTablesRequireHeaderSeparator, mPipedTablesRequireHeaderSeparator);
+                EditorPrefs.SetBool(KeyMermaidDiskCacheEnabled, mMermaidDiskCacheEnabled);
+                EditorPrefs.SetInt(KeyMermaidDiskCacheLocation, (int)mMermaidDiskCacheLocation);
             }
         }
 

@@ -2,6 +2,22 @@
 
 All notable changes to Unity Markdown Viewer will be documented in this file.
 
+## [1.1.0] — 2026-04-19
+
+### Added
+
+- **Mermaid diagram rendering** – Fenced `mermaid` code blocks now render as inline diagrams in the Inspector through a dedicated diagram block instead of plain inline images
+- **Diagram preview window** – Mermaid charts now expose an `Expand` action that opens a standalone preview window with zoom controls and drag panning
+- **Mermaid disk caching** – Successful Mermaid diagram renders are cached on disk by default and can be stored under the Unity project `Library` or `Temp` folder
+- **Mermaid regression coverage** – `Sample/sample.md` now includes flowchart, sequence, state, and gantt diagrams to verify rendering in formatted view
+
+### Changed
+
+- **Mermaid service fallback** – Mermaid render requests now retry Mermaid Ink and automatically fall back to Kroki before giving up
+- **Theme-aware diagram colors** – Mermaid render requests now derive colors from the active `MarkdownTheme` so charts maintain readable contrast in light and dark themes
+- **Wide-diagram handling** – Mermaid charts now scroll horizontally inside the Inspector when they exceed the available width
+- **Documentation refresh** – README, sample documentation, contributing guidance, and package metadata now document Mermaid support, preview expansion, zoom/pan, disk caching, theme-aware contrast, and fallback behavior
+
 ## [1.0.0] — 2026-04-11
 
 ### Initial Release
@@ -101,7 +117,6 @@ This project follows [Semantic Versioning](https://semver.org/):
 
 Potential features for future releases:
 
-- [ ] Mermaid diagram support
 - [ ] PlantUML rendering
 - [ ] Full-text search with highlighting
 

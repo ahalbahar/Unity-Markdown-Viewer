@@ -162,6 +162,20 @@ namespace AB.MDV.Layout
         }
 
         /// <inheritdoc/>
+        public void Diagram(MarkdownImageRequest imageRequest, string source, string title)
+        {
+            if (imageRequest == null)
+            {
+                throw new System.ArgumentNullException(nameof(imageRequest));
+            }
+
+            // CHANGED: Mermaid blocks now use a dedicated block so wide charts can scroll horizontally and pop out.
+            Space();
+            AddBlock(new BlockDiagram(mIndent, imageRequest, source, title));
+            Space();
+        }
+
+        /// <inheritdoc/>
         public void NewLine()
         {
             if (mCurrentContent != null && mCurrentContent.IsEmpty)

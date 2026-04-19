@@ -12,6 +12,7 @@ This document is both a **regression test** and a **feature showcase** for the U
 - [Blockquotes & Admonitions](#blockquotes)
 - [Tables](#tables)
 - [Code & Syntax Highlighting](#code)
+- [Mermaid Diagrams](#mermaid)
 - [Links & Images](#links)
 - [Emoji](#emoji)
 - [Task Lists](#task-lists)
@@ -474,7 +475,60 @@ LIMIT 100;
 
 ---
 
-## 7. Links & Images {#links}
+## 7. Mermaid Diagrams {#mermaid}
+
+Mermaid fenced blocks should render as inline diagrams in formatted view and remain editable text in raw view. The rendered image is fetched from Mermaid Ink with Kroki fallback, so the first load requires network access. Successful renders are cached on disk by default, wide diagrams should scroll horizontally in the Inspector, and each diagram should expose an `Expand` button that opens the zoomable preview window.
+
+### Flowchart
+
+```mermaid
+flowchart LR
+    Doc["Markdown File"] --> Parse["Markdig Parse"]
+    Parse --> Render["Unity Renderer"]
+    Render --> Layout["Layout Builder"]
+    Layout --> View["Inspector View"]
+```
+
+### Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Inspector
+    participant MermaidInk as Mermaid Ink
+    User->>Inspector: Select sample.md
+    Inspector->>MermaidInk: Request rendered PNG
+    MermaidInk-->>Inspector: Diagram image
+    Inspector-->>User: Display rendered Mermaid block
+```
+
+### State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> Loading
+    Loading --> Ready: image fetched
+    Loading --> FallbackText: request failed
+    Ready --> [*]
+    FallbackText --> [*]
+```
+
+### Gantt Chart
+
+```mermaid
+gantt
+    title Drift Kings Docs Rollout
+    dateFormat  YYYY-MM-DD
+    section Viewer
+    Markdown renderer update :done, renderer, 2026-04-16, 2d
+    section Docs
+    Sample diagrams added :done, docs1, 2026-04-18, 1d
+    README and changelog refresh :active, docs2, 2026-04-19, 1d
+```
+
+---
+
+## 8. Links & Images {#links}
 
 ### External links
 
@@ -502,7 +556,7 @@ LIMIT 100;
 
 ---
 
-## 8. Task Lists {#task-lists}
+## 9. Task Lists {#task-lists}
 
 Progress on the Markdown Viewer enhancement:
 
@@ -518,11 +572,11 @@ Progress on the Markdown Viewer enhancement:
 - [x] New theme presets: Monokai, Dracula
 - [x] Extended language support: C++, HLSL, Rust, YAML, CSS, Lua, SQL
 - [x] Scroll-to-anchor navigation
-- [ ] Horizontal scrolling for wide code blocks (TODO)
+- [x] Mermaid diagram rendering for fenced `mermaid` blocks
 
 ---
 
-## 9. Emoji {#emoji}
+## 10. Emoji {#emoji}
 
 This section validates emoji rendering across Unity versions.
 
@@ -546,7 +600,7 @@ If you are testing on Unity 2021 or 2022, supported emoji should render as inlin
 
 ---
 
-## 10. Definition Lists {#definitions}
+## 11. Definition Lists {#definitions}
 
 Render Engine
 :   The subsystem that converts the parsed Markdig AST into a Unity IMGUI layout tree.
@@ -562,7 +616,7 @@ SyntaxHighlighter
 
 ---
 
-## 11. Miscellaneous {#misc}
+## 12. Miscellaneous {#misc}
 
 ### Horizontal rules
 

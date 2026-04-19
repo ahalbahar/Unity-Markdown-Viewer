@@ -50,7 +50,9 @@ We actively welcome pull requests! Here's how to submit one:
    - Verify the active theme is editable from **Project Settings > AB > Markdown Viewer**
    - Check anchor navigation and links
    - Test image loading and syntax highlighting
+   - Test Mermaid fenced blocks in formatted and raw view, including wide-chart scrolling, the `Expand` preview action, zoom/pan in the preview window, the fallback text path when diagram image fetches fail, and the backup render endpoint path
    - Test emoji rendering in formatted view, especially on Unity versions older than Unity 6 where emoji use the theme-configured CDN fallback chain
+   - Test Mermaid disk caching from `Preferences > AB > Markdown`, including both `Library` and `Temp` cache locations when changing related code
 
 6. **Push to your fork** and submit a Pull Request:
    ```bash
@@ -160,6 +162,8 @@ Assets/AB/Unity-Markdown-Viewer/
 - **Anchor navigation**: Click `[jump](#section-id)` links in markdown
 - **Themes**: Open the theme asset or **Project Settings > AB > Markdown Viewer** and try each preset
 - **Images**: Test relative and absolute image paths
+- **Mermaid**: Test fenced `mermaid` blocks, verify diagrams render in formatted view, verify wide charts scroll in the Inspector, verify `Expand` opens the preview window, verify zoom/pan behavior in the preview window, and verify the fallback text path when Mermaid Ink and the backup endpoint are unavailable
+- **Mermaid cache**: Verify the preference toggle and storage location selector under `Preferences > AB > Markdown`, and confirm cached diagrams refresh when expected
 - **Emoji**: Verify emoji render correctly in formatted view on both Unity 6 and older supported editor versions, and verify the theme editor foldout and custom emoji source templates still work
 - **Code blocks**: Try different language syntax highlighting
 - **Admonitions**: Render `> [!NOTE]`, `> [!WARNING]`, etc.

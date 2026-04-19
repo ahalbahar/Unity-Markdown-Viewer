@@ -4,6 +4,8 @@
 // Author:  Ahmad Albahar
 // ============================================================
 
+using System;
+using System.Text;
 using Markdig.Renderers;
 using Markdig.Syntax;
 
@@ -23,17 +25,17 @@ namespace AB.MDV.Renderer
         protected override void Write(RendererMarkdown renderer, CodeBlock block)
         {
             var fencedCodeBlock = block as FencedCodeBlock;
-            var lang = fencedCodeBlock?.Info;
+            var lang = fencedCodeBlock?.Info?.Trim();
+            var content = GetBlockContent(block);
+
+            if (IsMermaidFence(lang) && TryRenderMermaidDiagram(renderer, content))
+            {
+                return;
+            }
 
             var prevStyle = renderer.Style;
             renderer.Style.Fixed = true;
             renderer.Style.Block = true;
-
-            var content = string.Empty;
-            for (var i = 0; i < block.Lines.Count; i++)
-            {
-                content += block.Lines.Lines[i].ToString() + "\n";
-            }
 
             var highlighted = SyntaxHighlighter.Highlight(code: content, lang: lang);
 
@@ -67,6 +69,38 @@ namespace AB.MDV.Renderer
 
             renderer.Style = prevStyle;
             renderer.FinishBlock(true);
+        }
+
+        private static bool IsMermaidFence(string lang)
+        {
+            return string.Equals(lang, "mermaid", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string GetBlockContent(CodeBlock block)
+        {
+            var builder = new StringBuilder();
+
+            for (var i = 0; i < block.Lines.Count; i++)
+            {
+                builder.Append(block.Lines.Lines[i].ToString());
+                builder.Append('\n');
+            }
+
+            return builder.ToString();
+        }
+
+        private static bool TryRenderMermaidDiagram(RendererMarkdown renderer, string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return false;
+            }
+
+            // CHANGED: Mermaid fences now render through a themed multi-endpoint request so charts can scroll and pop out.
+            MarkdownMermaidDiagram diagram = MarkdownMermaid.CreateDiagram(content, "Mermaid diagram");
+            renderer.Layout.Diagram(diagram.ImageRequest, diagram.Source, diagram.Title);
+            renderer.FinishBlock(true);
+            return true;
         }
     }
 }
