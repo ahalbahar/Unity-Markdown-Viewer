@@ -1,2 +1,5 @@
-act-artifacts/
 act-artifacts.meta
+CODE_QUALITY_FINDINGS.md
+CODE_QUALITY_FINDINGS.md.meta
+.act-artifacts/
+act-artifacts/

@@ -72,6 +72,7 @@ jobs:
             --exclude='./CONTRIBUTING.md.meta' \
             --exclude='./CODE_QUALITY_FINDINGS.md' \
             --exclude='./CODE_QUALITY_FINDINGS.md.meta' \
+            --exclude='./.act-artifacts' \
             --exclude='./act-artifacts' \
             --exclude='./staging' \
             --exclude='./dist' \
@@ -111,14 +112,40 @@ jobs:
         run: |
           set -euo pipefail
 
-          # CHANGED: Feed the action explicit staged file paths because its files-glob input resolves from the workflow cwd instead of the declared root (2026-04-11)
-          {
-            echo 'files<<EOF'
+          mapfile -t staged_files < <(
             find staging/Assets/AB/Unity-Markdown-Viewer \
               -type f \
               ! -name '*.meta' \
               ! -name 'CONTRIBUTING.md' \
-              ! -name 'CODE_QUALITY_FINDINGS.md' | sort
+              ! -name 'CODE_QUALITY_FINDINGS.md' \
+              | sort
+          )
+
+          valid_files=()
+          skipped_files=()
+
+          for staged_file in "${staged_files[@]}"; do
+            if [[ -f "${staged_file}.meta" ]]; then
+              valid_files+=("${staged_file}")
+            else
+              skipped_files+=("${staged_file}")
+            fi
+          done
+
+          if [[ ${#skipped_files[@]} -gt 0 ]]; then
+            printf 'Skipping staged files without Unity .meta sidecars:\n' >&2
+            printf ' - %s\n' "${skipped_files[@]}" >&2
+          fi
+
+          if [[ ${#valid_files[@]} -eq 0 ]]; then
+            echo 'No staged package files with matching .meta sidecars were found.' >&2
+            exit 1
+          fi
+
+          # CHANGED: Keep the action input limited to staged files that still have matching Unity .meta sidecars so create-unitypackage cannot fail on control files such as .gitignore (2026-04-20)
+          {
+            echo 'files<<EOF'
+            printf '%s\n' "${valid_files[@]}"
             echo 'EOF'
           } >> "${GITHUB_OUTPUT}"
 
@@ -139,26 +166,28 @@ jobs:
         id: release_notes
         shell: bash
         run: |
+          set -euo pipefail
+
           VERSION="${{ steps.version.outputs.version }}"
           VERSION_RAW="${VERSION#v}"
+          NOTES_CONTENT_PATH="notes_content.txt"
 
-          # Extract section body (skip the header line itself, stop at next H2)
+          # CHANGED: Keep manual builds green even when the requested version is not yet in CHANGELOG.md by using a zero-match-safe filter pipeline (2026-04-20)
           awk -v ver="## [${VERSION_RAW}]" '
             index($0, ver) == 1 { p=1; next }
             p && /^## / { exit }
             p { print }
           ' CHANGELOG.md \
-            | sed -e '/./,$!d' -e :a -e '/^\s*$/{$d;N;ba}' \
-            | grep -v '^---$' \
-            > notes_content.txt
+            | sed -e '/./,$!d' -e :a -e '/^[[:space:]]*$/{$d;N;ba}' -e '/^---$/d' \
+            > "${NOTES_CONTENT_PATH}"
 
           {
-            if [ -s notes_content.txt ]; then
+            if [ -s "${NOTES_CONTENT_PATH}" ]; then
               # Wrap body in a collapsible details block for GitHub UI
               echo "<details>"
               echo "<summary><b>Unity Markdown Viewer ${VERSION} — Click to expand release notes</b></summary>"
               echo ""
-              cat notes_content.txt
+              cat "${NOTES_CONTENT_PATH}"
               echo ""
               echo "</details>"
             else
