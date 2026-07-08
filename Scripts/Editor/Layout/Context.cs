@@ -102,5 +102,13 @@ namespace AB.MDV.Layout
         /// <returns>The calculated size.</returns>
         public Vector2 CalcSize(GUIContent content) => mStyleGUI.CalcSize(content);
 
+        /// <summary>
+        /// Calculates the wrapped height of the specified content for a constrained width.
+        /// </summary>
+        /// <param name="content">The content to measure.</param>
+        /// <param name="width">The available width in pixels.</param>
+        /// <returns>The wrapped height for the current style.</returns>
+        public float CalcHeight(GUIContent content, float width) => mStyleGUI.CalcHeight(content, width);
+
     }
 }

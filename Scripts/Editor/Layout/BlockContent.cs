@@ -75,6 +75,7 @@ namespace AB.MDV.Layout
             }
 
             mContent.ForEach(c => c.Update(context));
+            ConstrainOversizedContent(context, maxWidth);
 
             var rowWidth = mContent[0].Width;
             var rowHeight = mContent[0].Height;
@@ -108,6 +109,22 @@ namespace AB.MDV.Layout
 
             Rect.width = maxWidth;
             Rect.height = pos.y - origin.y;
+        }
+
+        private void ConstrainOversizedContent(Context context, float maxWidth)
+        {
+            for (var i = 0; i < mContent.Count; i++)
+            {
+                var content = mContent[i];
+                if (!(content is ContentText) || content.Width <= maxWidth)
+                {
+                    continue;
+                }
+
+                context.Apply(content.Style);
+                content.Location.width = maxWidth;
+                content.Location.height = context.CalcHeight(content.Payload, maxWidth);
+            }
         }
 
         private void LayoutRow(Vector2 pos, int from, int until, float rowHeight)
