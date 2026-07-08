@@ -14,7 +14,6 @@ namespace AB.MDV.Layout
     /// </summary>
     public class StyleConverter
     {
-        private Style      mCurrentStyle = Style.Default;
         private GUIStyle[] mWorking;
         private GUIStyle[] mReference;
 
@@ -150,59 +149,56 @@ namespace AB.MDV.Layout
             var style  = src.Block ? mWorking[ FixedBlock ] : mWorking[ src.Size ];
             var colors = MarkdownTheme.Instance.Active;
 
-            if( mCurrentStyle != src )
+            var fontIdx   = ( src.Fixed ? FixedInline : Variable ) + ( src.Bold ? 1 : 0 ) + ( src.Italic ? 2 : 0 );
+            var reference = mReference[ fontIdx ];
+
+            style.font      = reference.font;
+            style.fontStyle = reference.fontStyle;
+            style.richText  = src.RichText;
+            style.wordWrap  = false;
+            style.clipping  = TextClipping.Clip;
+            style.fontSize  = colors.TextSize;
+            style.padding   = new RectOffset( 0, 0, 0, 0 );
+
+            if( src.Subscript || src.Superscript )
             {
-                var fontIdx   = ( src.Fixed ? FixedInline : Variable ) + ( src.Bold ? 1 : 0 ) + ( src.Italic ? 2 : 0 );
-                var reference = mReference[ fontIdx ];
-
-                style.font      = reference.font;
-                style.fontStyle = reference.fontStyle;
-                style.richText  = src.RichText;
-                style.fontSize  = colors.TextSize;
-                style.padding   = new RectOffset( 0, 0, 0, 0 );
-
-                if( src.Subscript || src.Superscript )
-                {
-                    style.fontSize         = Mathf.RoundToInt( colors.TextSize * 0.75f );
-                    style.normal.textColor = src.Subscript ? colors.SubscriptColor : colors.SuperscriptColor;
-                }
-                else if( src.Link )
-                {
-                    style.normal.textColor = colors.Link;
-                }
-                else
-                {
-                    switch( src.Size )
-                    {
-                        case 1:
-                            style.normal.textColor = colors.Heading1;
-                            style.fontSize         = colors.Heading1Size;
-                            style.fontStyle        = FontStyle.Bold;
-                            style.padding          = new RectOffset( 0, 0, 15, 10 );
-                            break;
-                        case 2:
-                            style.normal.textColor = colors.Heading2;
-                            style.fontSize         = colors.Heading2Size;
-                            style.fontStyle        = FontStyle.Bold;
-                            style.padding          = new RectOffset( 0, 0, 10, 5 );
-                            break;
-                        case 3:  style.normal.textColor = colors.Heading3; style.fontSize = colors.Heading3Size; break;
-                        case 4:  style.normal.textColor = colors.Heading4; style.fontSize = colors.Heading4Size; break;
-                        case 5:  style.normal.textColor = colors.Heading5; style.fontSize = colors.Heading5Size; break;
-                        case 6:  style.normal.textColor = colors.Heading6; style.fontSize = colors.Heading6Size; break;
-                        default: style.normal.textColor = colors.Text; break;
-                    }
-                }
-
-                if( src.Strikethrough )
-                {
-                    style.richText = true;
-                }
-
-                style.font = FontCompatibility.ResolveFont(reference.font, src, style.fontSize);
-
-                mCurrentStyle = src;
+                style.fontSize         = Mathf.RoundToInt( colors.TextSize * 0.75f );
+                style.normal.textColor = src.Subscript ? colors.SubscriptColor : colors.SuperscriptColor;
             }
+            else if( src.Link )
+            {
+                style.normal.textColor = colors.Link;
+            }
+            else
+            {
+                switch( src.Size )
+                {
+                    case 1:
+                        style.normal.textColor = colors.Heading1;
+                        style.fontSize         = colors.Heading1Size;
+                        style.fontStyle        = FontStyle.Bold;
+                        style.padding          = new RectOffset( 0, 0, 15, 10 );
+                        break;
+                    case 2:
+                        style.normal.textColor = colors.Heading2;
+                        style.fontSize         = colors.Heading2Size;
+                        style.fontStyle        = FontStyle.Bold;
+                        style.padding          = new RectOffset( 0, 0, 10, 5 );
+                        break;
+                    case 3:  style.normal.textColor = colors.Heading3; style.fontSize = colors.Heading3Size; break;
+                    case 4:  style.normal.textColor = colors.Heading4; style.fontSize = colors.Heading4Size; break;
+                    case 5:  style.normal.textColor = colors.Heading5; style.fontSize = colors.Heading5Size; break;
+                    case 6:  style.normal.textColor = colors.Heading6; style.fontSize = colors.Heading6Size; break;
+                    default: style.normal.textColor = colors.Text; break;
+                }
+            }
+
+            if( src.Strikethrough )
+            {
+                style.richText = true;
+            }
+
+            style.font = FontCompatibility.ResolveFont(reference.font, src, style.fontSize);
 
             return style;
         }

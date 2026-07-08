@@ -13,6 +13,7 @@ This document is both a **regression test** and a **feature showcase** for the U
 - [Tables](#tables)
 - [Code & Syntax Highlighting](#code)
 - [Mermaid Diagrams](#mermaid)
+- [PlantUML Diagrams](#plantuml)
 - [Links & Images](#links)
 - [Emoji](#emoji)
 - [Task Lists](#task-lists)
@@ -528,7 +529,100 @@ gantt
 
 ---
 
-## 8. Links & Images {#links}
+## 8. PlantUML Diagrams {#plantuml}
+
+PlantUML fenced blocks should render as inline diagrams in formatted view and remain editable text in raw view. Supported fence labels are `plantuml`, `puml`, and `uml`. The rendered image is fetched from the PlantUML server with Kroki fallback, successful renders use the same diagram disk cache as Mermaid, wide diagrams should scroll horizontally in the Inspector, and each diagram should expose an `Expand` button with zoom and pan.
+
+### Sequence Diagram (`plantuml`)
+
+```plantuml
+@startuml
+title Inspector PlantUML render request
+actor User
+participant "Unity Inspector" as Inspector
+participant "PlantUML Server" as PlantUML
+participant "Kroki Fallback" as Kroki
+
+User -> Inspector: Select sample.md
+Inspector -> PlantUML: Request rendered PNG
+alt Primary renderer succeeds
+    PlantUML --> Inspector: Diagram image
+else Primary renderer fails
+    Inspector -> Kroki: POST PlantUML source
+    Kroki --> Inspector: Diagram image
+end
+Inspector --> User: Display rendered PlantUML block
+@enduml
+```
+
+### Class Diagram (`puml`)
+
+```puml
+@startuml
+class MarkdownViewer {
+    +SetSource(path: string)
+    +Render()
+}
+
+class RendererMarkdown {
+    +Write(block)
+}
+
+class LayoutBuilder {
+    +Diagram(request, source, title)
+}
+
+MarkdownViewer --> RendererMarkdown
+RendererMarkdown --> LayoutBuilder
+LayoutBuilder --> MarkdownImageRequest
+@enduml
+```
+
+### Component Diagram (`uml`)
+
+```uml
+@startuml
+package "Markdown Rendering" {
+    [Markdig Parser] --> [RendererMarkdown]
+    [RendererMarkdown] --> [Layout Builder]
+    [Layout Builder] --> [Inspector GUI]
+}
+
+database "Diagram Cache" as Cache
+[Layout Builder] --> Cache
+[Inspector GUI] --> [Preview Window]
+@enduml
+```
+
+### Shorthand Sequence Without Start Tags
+
+```plantuml
+User -> Inspector: Open markdown asset
+Inspector -> Renderer: Render fenced plantuml block
+Renderer --> Inspector: Inline diagram block
+```
+
+### Mind Map
+
+```plantuml
+@startmindmap
+* Diagram coverage
+** Mermaid
+*** Flowchart
+*** Sequence
+*** State
+*** Gantt
+** PlantUML
+*** Sequence
+*** Class
+*** Component
+*** Mind map
+@endmindmap
+```
+
+---
+
+## 9. Links & Images {#links}
 
 ### External links
 
@@ -556,7 +650,7 @@ gantt
 
 ---
 
-## 9. Task Lists {#task-lists}
+## 10. Task Lists {#task-lists}
 
 Progress on the Markdown Viewer enhancement:
 
@@ -573,10 +667,11 @@ Progress on the Markdown Viewer enhancement:
 - [x] Extended language support: C++, HLSL, Rust, YAML, CSS, Lua, SQL
 - [x] Scroll-to-anchor navigation
 - [x] Mermaid diagram rendering for fenced `mermaid` blocks
+- [x] PlantUML diagram rendering for fenced `plantuml`, `puml`, and `uml` blocks
 
 ---
 
-## 10. Emoji {#emoji}
+## 11. Emoji {#emoji}
 
 This section validates emoji rendering across Unity versions.
 
@@ -600,7 +695,7 @@ If you are testing on Unity 2021 or 2022, supported emoji should render as inlin
 
 ---
 
-## 11. Definition Lists {#definitions}
+## 12. Definition Lists {#definitions}
 
 Render Engine
 :   The subsystem that converts the parsed Markdig AST into a Unity IMGUI layout tree.
@@ -616,7 +711,7 @@ SyntaxHighlighter
 
 ---
 
-## 12. Miscellaneous {#misc}
+## 13. Miscellaneous {#misc}
 
 ### Horizontal rules
 

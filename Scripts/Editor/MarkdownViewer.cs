@@ -162,7 +162,8 @@ namespace AB.MDV
         /// <summary>
         /// Renders the markdown content using IMGUI.
         /// </summary>
-        public void Draw()
+        /// <param name="reservedToolbarRightWidth">Right-side toolbar width reserved by the owning Inspector.</param>
+        public void Draw(float reservedToolbarRightWidth = 0.0f)
         {
             GUI.skin = mSkin;
             GUI.enabled = true;
@@ -173,7 +174,7 @@ namespace AB.MDV
             var totalWidth = mViewWidthProvider();
             var contentWidth = totalWidth - margin.left - margin.right;
 
-            DrawToolbar(contentWidth, margin);
+            DrawToolbar(contentWidth, margin, reservedToolbarRightWidth);
 
             if (mRaw)
             {
@@ -204,11 +205,13 @@ namespace AB.MDV
         /// </summary>
         /// <param name="contentWidth">The width of the content area.</param>
         /// <param name="margin">The content margin.</param>
-        private void DrawToolbar(float contentWidth, RectOffset margin)
+        /// <param name="reservedRightWidth">Right-side width reserved for host Inspector controls.</param>
+        private void DrawToolbar(float contentWidth, RectOffset margin, float reservedRightWidth)
         {
             var style = GUI.skin.button;
             var size = style.fixedHeight;
-            var btn = new Rect(margin.left + contentWidth - size, margin.top, size, size);
+            var rightReservation = Mathf.Clamp(reservedRightWidth, 0.0f, Mathf.Max(0.0f, contentWidth - size));
+            var btn = new Rect(margin.left + contentWidth - size - rightReservation, margin.top, size, size);
 
             if (GUI.Button(btn, string.Empty, GUI.skin.GetStyle(mRaw ? "btnRaw" : "btnFile")))
             {

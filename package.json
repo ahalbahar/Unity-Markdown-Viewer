@@ -2,9 +2,9 @@
   "schema": "ab-package",
   "schemaVersion": "1",
   "name": "com.ab.unitymarkdownviewer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "displayName": "Unity Markdown Viewer",
-  "description": "View Markdown files directly in the Unity Editor Inspector with syntax highlighting, theme presets, anchor navigation, tables, images, GIF support, themed Mermaid diagrams, expandable preview windows, and project settings integration.",
+  "description": "View Markdown files directly in the Unity Editor Inspector with syntax highlighting, theme presets, anchor navigation, tables, images, GIF support, themed Mermaid and PlantUML diagrams, expandable preview windows, and project settings integration.",
   "author": {
     "name": "Ahmad Albahar / AB Studios",
     "url": "https://github.com/ahalbahar/Unity-Markdown-Viewer"
@@ -26,6 +26,8 @@
     "readme",
     "changelog",
     "mermaid",
+    "plantuml",
+    "uml",
     "diagram",
     "md",
     ".md"

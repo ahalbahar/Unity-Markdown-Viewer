@@ -1,6 +1,6 @@
 // ============================================================
 // File:    BlockDiagram.cs
-// Purpose: Renderable block for Mermaid diagrams with scroll and popout support.
+// Purpose: Renderable block for diagrams with scroll and popout support.
 // Author:  Ahmad Albahar
 // Created: 2026-04-19
 // Notes:   Provides horizontal scrolling for wide diagrams inside the Inspector.
@@ -12,7 +12,7 @@ using UnityEngine;
 namespace AB.MDV.Layout
 {
     /// <summary>
-    /// A dedicated block for rendered Mermaid diagrams.
+    /// A dedicated block for rendered diagrams.
     /// </summary>
     public class BlockDiagram : Block
     {
@@ -40,14 +40,14 @@ namespace AB.MDV.Layout
         /// </summary>
         /// <param name="indent">The indentation level.</param>
         /// <param name="imageRequest">The themed image request.</param>
-        /// <param name="source">The raw Mermaid source.</param>
+        /// <param name="source">The raw diagram source.</param>
         /// <param name="title">The display title.</param>
         public BlockDiagram(float indent, MarkdownImageRequest imageRequest, string source, string title)
             : base(indent)
         {
             mImageRequest = imageRequest;
             mSource = source ?? string.Empty;
-            mTitle = string.IsNullOrWhiteSpace(title) ? "Mermaid diagram" : title;
+            mTitle = string.IsNullOrWhiteSpace(title) ? "Diagram" : title;
         }
 
         /// <summary>

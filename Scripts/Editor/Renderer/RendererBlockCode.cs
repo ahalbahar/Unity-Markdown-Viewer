@@ -25,10 +25,15 @@ namespace AB.MDV.Renderer
         protected override void Write(RendererMarkdown renderer, CodeBlock block)
         {
             var fencedCodeBlock = block as FencedCodeBlock;
-            var lang = fencedCodeBlock?.Info?.Trim();
+            var lang = GetFenceLanguage(fencedCodeBlock?.Info);
             var content = GetBlockContent(block);
 
             if (IsMermaidFence(lang) && TryRenderMermaidDiagram(renderer, content))
+            {
+                return;
+            }
+
+            if (IsPlantUmlFence(lang) && TryRenderPlantUmlDiagram(renderer, content))
             {
                 return;
             }
@@ -76,6 +81,31 @@ namespace AB.MDV.Renderer
             return string.Equals(lang, "mermaid", StringComparison.OrdinalIgnoreCase);
         }
 
+        private static bool IsPlantUmlFence(string lang)
+        {
+            return string.Equals(lang, "plantuml", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(lang, "puml", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(lang, "uml", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string GetFenceLanguage(string info)
+        {
+            if (string.IsNullOrWhiteSpace(info))
+            {
+                return string.Empty;
+            }
+
+            string[] parts = info.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            return parts[0]
+                .Trim('{', '}')
+                .TrimStart('.');
+        }
+
         private static string GetBlockContent(CodeBlock block)
         {
             var builder = new StringBuilder();
@@ -98,6 +128,19 @@ namespace AB.MDV.Renderer
 
             // CHANGED: Mermaid fences now render through a themed multi-endpoint request so charts can scroll and pop out.
             MarkdownMermaidDiagram diagram = MarkdownMermaid.CreateDiagram(content, "Mermaid diagram");
+            renderer.Layout.Diagram(diagram.ImageRequest, diagram.Source, diagram.Title);
+            renderer.FinishBlock(true);
+            return true;
+        }
+
+        private static bool TryRenderPlantUmlDiagram(RendererMarkdown renderer, string content)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return false;
+            }
+
+            MarkdownPlantUmlDiagram diagram = MarkdownPlantUml.CreateDiagram(content, "PlantUML diagram");
             renderer.Layout.Diagram(diagram.ImageRequest, diagram.Source, diagram.Title);
             renderer.FinishBlock(true);
             return true;

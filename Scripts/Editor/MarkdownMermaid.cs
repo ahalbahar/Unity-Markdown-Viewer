@@ -8,9 +8,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
 
@@ -76,7 +73,7 @@ namespace AB.MDV
             string themedSource = BuildDirectiveSource(source, themeConfigJson);
             string mermaidInkPayload = BuildMermaidInkPayload(source, themeConfigJson);
             string backgroundHex = ToHex(theme.PageBackground);
-            string cacheKey = ComputeSha256($"{themeConfigJson}\n---\n{source}");
+            string cacheKey = MarkdownDiagramEncoding.ComputeSha256($"{themeConfigJson}\n---\n{source}");
             string displayName = string.IsNullOrWhiteSpace(title) ? "Mermaid diagram" : title;
 
             var candidates = new List<MarkdownImageCandidate>(AttemptsPerEndpoint * 2);
@@ -98,7 +95,7 @@ namespace AB.MDV
                 cacheKey,
                 displayName,
                 MarkdownImageRequestKind.MermaidDiagram,
-                MarkdownPreferences.MermaidDiskCacheEnabled);
+                MarkdownPreferences.DiagramDiskCacheEnabled);
 
             return new MarkdownMermaidDiagram(source, displayName, imageRequest);
         }
@@ -106,8 +103,8 @@ namespace AB.MDV
         private static string BuildMermaidInkUrl(string payload, string backgroundHex)
         {
             byte[] payloadBytes = Encoding.UTF8.GetBytes(payload);
-            byte[] compressed = CompressZlib(payloadBytes);
-            string encoded = ToBase64Url(compressed);
+            byte[] compressed = MarkdownDiagramEncoding.CompressZlib(payloadBytes);
+            string encoded = MarkdownDiagramEncoding.ToBase64Url(compressed);
             return $"https://mermaid.ink/img/pako:{encoded}?type=png&bgColor={backgroundHex}";
         }
 
@@ -115,14 +112,14 @@ namespace AB.MDV
         {
             return string.Format(
                 "{{\"diagram_source\":\"{0}\",\"diagram_type\":\"mermaid\",\"output_format\":\"png\"}}",
-                EscapeJson(themedSource));
+                MarkdownDiagramEncoding.EscapeJson(themedSource));
         }
 
         private static string BuildMermaidInkPayload(string source, string themeConfigJson)
         {
             return string.Format(
                 "{{\"code\":\"{0}\",\"mermaid\":{1},\"autoSync\":true,\"updateDiagram\":false,\"editorMode\":\"code\"}}",
-                EscapeJson(source),
+                MarkdownDiagramEncoding.EscapeJson(source),
                 themeConfigJson);
         }
 
@@ -169,113 +166,6 @@ namespace AB.MDV
         private static string ToHex(Color color)
         {
             return ColorUtility.ToHtmlStringRGB(color);
-        }
-
-        private static string EscapeJson(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                return string.Empty;
-            }
-
-            var builder = new StringBuilder(value.Length + 32);
-
-            foreach (char character in value)
-            {
-                switch (character)
-                {
-                    case '\\':
-                        builder.Append("\\\\");
-                        break;
-                    case '"':
-                        builder.Append("\\\"");
-                        break;
-                    case '\n':
-                        builder.Append("\\n");
-                        break;
-                    case '\r':
-                        builder.Append("\\r");
-                        break;
-                    case '\t':
-                        builder.Append("\\t");
-                        break;
-                    default:
-                        if (char.IsControl(character))
-                        {
-                            builder.AppendFormat("\\u{0:x4}", (int)character);
-                        }
-                        else
-                        {
-                            builder.Append(character);
-                        }
-
-                        break;
-                }
-            }
-
-            return builder.ToString();
-        }
-
-        private static byte[] CompressZlib(byte[] data)
-        {
-            using (var output = new MemoryStream())
-            {
-                output.WriteByte(0x78);
-                output.WriteByte(0xDA);
-
-                using (var deflate = new DeflateStream(output, System.IO.Compression.CompressionLevel.Optimal, true))
-                {
-                    deflate.Write(data, 0, data.Length);
-                }
-
-                uint checksum = ComputeAdler32(data);
-                output.WriteByte((byte)((checksum >> 24) & 0xFF));
-                output.WriteByte((byte)((checksum >> 16) & 0xFF));
-                output.WriteByte((byte)((checksum >> 8) & 0xFF));
-                output.WriteByte((byte)(checksum & 0xFF));
-
-                return output.ToArray();
-            }
-        }
-
-        private static uint ComputeAdler32(byte[] data)
-        {
-            const uint modulo = 65521;
-            uint a = 1;
-            uint b = 0;
-
-            for (int i = 0; i < data.Length; i++)
-            {
-                a = (a + data[i]) % modulo;
-                b = (b + a) % modulo;
-            }
-
-            return (b << 16) | a;
-        }
-
-        private static string ToBase64Url(byte[] data)
-        {
-            return Convert.ToBase64String(data)
-                .TrimEnd('=')
-                .Replace('+', '-')
-                .Replace('/', '_');
-        }
-
-        private static string ComputeSha256(string value)
-        {
-            using (var hash = SHA256.Create())
-            {
-                byte[] data = Encoding.UTF8.GetBytes(value);
-                byte[] digest = hash.ComputeHash(data);
-                var builder = new StringBuilder(digest.Length * 2);
-
-                for (int i = 0; i < digest.Length; i++)
-                {
-                    builder.Append(digest[i].ToString("x2"));
-                }
-
-                return builder.ToString();
-            }
         }
     }
 }

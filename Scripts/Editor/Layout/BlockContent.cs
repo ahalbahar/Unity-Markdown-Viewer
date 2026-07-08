@@ -75,6 +75,7 @@ namespace AB.MDV.Layout
             }
 
             mContent.ForEach(c => c.Update(context));
+            MeasureTextContent(context);
             ConstrainOversizedContent(context, maxWidth);
 
             var rowWidth = mContent[0].Width;
@@ -121,9 +122,22 @@ namespace AB.MDV.Layout
                     continue;
                 }
 
-                context.Apply(content.Style);
                 content.Location.width = maxWidth;
-                content.Location.height = context.CalcHeight(content.Payload, maxWidth);
+            }
+        }
+
+        private void MeasureTextContent(Context context)
+        {
+            for (var i = 0; i < mContent.Count; i++)
+            {
+                var content = mContent[i];
+                if (!(content is ContentText))
+                {
+                    continue;
+                }
+
+                context.Apply(content.Style);
+                content.CalcSize(context);
             }
         }
 

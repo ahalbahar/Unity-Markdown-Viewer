@@ -1,9 +1,9 @@
 // ============================================================
 // File:    MarkdownDiagramPreviewWindow.cs
-// Purpose: Preview window for Mermaid diagrams rendered by the markdown viewer.
+// Purpose: Preview window for diagrams rendered by the markdown viewer.
 // Author:  Ahmad Albahar
 // Created: 2026-04-19
-// Notes:   Supports rendered preview and raw Mermaid source tabs.
+// Notes:   Supports rendered preview and raw diagram source tabs.
 // ============================================================
 
 using UnityEditor;
@@ -12,7 +12,7 @@ using UnityEngine;
 namespace AB.MDV
 {
     /// <summary>
-    /// Standalone preview window for Mermaid diagrams.
+    /// Standalone preview window for rendered diagrams.
     /// </summary>
     public class MarkdownDiagramPreviewWindow : EditorWindow
     {
@@ -23,7 +23,7 @@ namespace AB.MDV
         private MarkdownHandleImages mImages = new MarkdownHandleImages();
         private MarkdownImageRequest mImageRequest;
         private string mSource = string.Empty;
-        private string mTitle = "Mermaid Diagram";
+        private string mTitle = "Diagram";
         private Vector2 mPreviewScroll;
         private Vector2 mSourceScroll;
         private bool mShowSource;
@@ -33,16 +33,16 @@ namespace AB.MDV
         private Vector2 mPanStartScroll;
 
         /// <summary>
-        /// Opens a preview window for the specified Mermaid diagram.
+        /// Opens a preview window for the specified rendered diagram.
         /// </summary>
         /// <param name="title">The display title.</param>
-        /// <param name="source">The raw Mermaid source.</param>
+        /// <param name="source">The raw diagram source.</param>
         /// <param name="imageRequest">The diagram render request.</param>
         public static void ShowWindow(string title, string source, MarkdownImageRequest imageRequest)
         {
-            var window = GetWindow<MarkdownDiagramPreviewWindow>(false, string.IsNullOrWhiteSpace(title) ? "Mermaid Diagram" : title, true);
+            var window = GetWindow<MarkdownDiagramPreviewWindow>(false, string.IsNullOrWhiteSpace(title) ? "Diagram" : title, true);
             window.minSize = new Vector2(480.0f, 320.0f);
-            window.mTitle = string.IsNullOrWhiteSpace(title) ? "Mermaid Diagram" : title;
+            window.mTitle = string.IsNullOrWhiteSpace(title) ? "Diagram" : title;
             window.mSource = source ?? string.Empty;
             window.mImageRequest = imageRequest;
             window.mPreviewScroll = Vector2.zero;
@@ -129,7 +129,7 @@ namespace AB.MDV
         {
             if (mImageRequest == null)
             {
-                EditorGUILayout.HelpBox("No Mermaid diagram request is available.", MessageType.Warning);
+                EditorGUILayout.HelpBox("No diagram request is available.", MessageType.Warning);
                 return;
             }
 

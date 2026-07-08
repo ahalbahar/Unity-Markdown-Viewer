@@ -2,6 +2,26 @@
 
 All notable changes to Unity Markdown Viewer will be documented in this file.
 
+## [1.2.0] — 2026-07-08
+
+### Added
+
+- **Inspector view switch** – Markdown inspectors now include a top-right Rendered/Original toggle so users can switch between the custom preview and Unity's original TextAsset Inspector
+- **PlantUML diagram rendering** – Fenced `plantuml`, `puml`, and `uml` code blocks now render as inline diagrams in the Inspector through the shared diagram block, preview window, disk cache, retry, and fallback pipeline
+- **PlantUML service fallback** – PlantUML render requests use the PlantUML server first and fall back to Kroki before showing readable fallback text
+- **PlantUML regression coverage** – `Sample/sample.md` now includes sequence, class, component, shorthand, and mind map PlantUML diagrams to verify rendering in formatted view
+
+### Changed
+
+- **Diagram cache preferences** – Diagram disk-cache settings now cover both Mermaid and PlantUML renders while preserving the existing preference storage
+- **Documentation refresh** – README, contributing guidance, sample documentation, and package metadata now document PlantUML support, aliases, fallback behavior, preview expansion, and disk caching
+
+### Fixed
+
+- **Oversized inline text bounds** – Long inline text now constrains to the available Inspector width so wide strings no longer stretch the markdown layout
+- **Rendered text overlap** – Inline text is now remeasured during layout with deterministic GUI styles so row positions match the text Unity draws
+- **HTML entity rendering** – HTML entities such as `&amp;`, `&lt;`, `&gt;`, and `&nbsp;` now render as decoded text even when raw HTML tags are stripped
+
 ## [1.1.0] — 2026-04-19
 
 ### Added
@@ -117,7 +137,6 @@ This project follows [Semantic Versioning](https://semver.org/):
 
 Potential features for future releases:
 
-- [ ] PlantUML rendering
 - [ ] Full-text search with highlighting
 
 ---

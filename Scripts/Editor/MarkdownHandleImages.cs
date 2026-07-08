@@ -23,7 +23,7 @@ namespace AB.MDV
     /// </summary>
     public class MarkdownHandleImages
     {
-        private const double MermaidRetryDelaySeconds = 0.75d;
+        private const double DiagramRetryDelaySeconds = 0.75d;
 
         /// <summary>
         /// The base path used for remapping relative image URLs.
@@ -306,17 +306,18 @@ namespace AB.MDV
 
             if (isProtocolError)
             {
-                if (ShouldAdvanceMermaidRequest(req))
+                if (ShouldAdvanceDiagramRequest(req))
                 {
-                    AdvanceMermaidRequest(req, GetRetryDelaySeconds(req));
+                    AdvanceDiagramRequest(req, GetRetryDelaySeconds(req));
                     return true;
                 }
 
                 bool isEmojiCdnAsset = AB.MDV.Layout.EmojiImageSupport.IsConfiguredEmojiSourceUrl(req.CurrentUrl);
-                if (IsMermaidDiagram(req))
+                if (IsDiagramRequest(req))
                 {
                     WarnOnce(req.CacheKey, string.Format(
-                        "Mermaid diagram render failed after {0} attempts across all endpoints. The viewer is falling back to text for '{1}'.",
+                        "{0} render failed after {1} attempts across all endpoints. The viewer is falling back to text for '{2}'.",
+                        GetDiagramDisplayLabel(req),
                         req.CandidateCount,
                         req.DisplayName));
                 }
@@ -336,9 +337,9 @@ namespace AB.MDV
             }
             else if (isConnectionError)
             {
-                if (ShouldAdvanceMermaidRequest(req))
+                if (ShouldAdvanceDiagramRequest(req))
                 {
-                    AdvanceMermaidRequest(req, MermaidRetryDelaySeconds);
+                    AdvanceDiagramRequest(req, DiagramRetryDelaySeconds);
                     return true;
                 }
 
@@ -348,10 +349,11 @@ namespace AB.MDV
                         "Emoji fallback image could not be downloaded for '{0}'. Check your internet connection if you want color emoji rendering in older Unity versions.",
                         req.CurrentUrl));
                 }
-                else if (IsMermaidDiagram(req))
+                else if (IsDiagramRequest(req))
                 {
                     WarnOnce(req.CacheKey, string.Format(
-                        "Mermaid diagram could not be downloaded after {0} attempts across all endpoints. The viewer is falling back to text for '{1}'.",
+                        "{0} could not be downloaded after {1} attempts across all endpoints. The viewer is falling back to text for '{2}'.",
+                        GetDiagramDisplayLabel(req),
                         req.CandidateCount,
                         req.DisplayName));
                 }
@@ -382,9 +384,9 @@ namespace AB.MDV
                 byte[] responseBytes = req.GetBytes();
                 Texture texture = CreateTexture(responseBytes);
 
-                if (texture == null && ShouldAdvanceMermaidRequest(req))
+                if (texture == null && ShouldAdvanceDiagramRequest(req))
                 {
-                    AdvanceMermaidRequest(req, 0.0d);
+                    AdvanceDiagramRequest(req, 0.0d);
                     return true;
                 }
 
@@ -443,14 +445,15 @@ namespace AB.MDV
                 false);
         }
 
-        private static bool IsMermaidDiagram(ImageRequest request)
+        private static bool IsDiagramRequest(ImageRequest request)
         {
-            return request.Kind == MarkdownImageRequestKind.MermaidDiagram;
+            return request.Kind == MarkdownImageRequestKind.MermaidDiagram
+                || request.Kind == MarkdownImageRequestKind.PlantUmlDiagram;
         }
 
-        private static bool IsTransientMermaidFailure(ImageRequest request)
+        private static bool IsTransientDiagramFailure(ImageRequest request)
         {
-            if (!IsMermaidDiagram(request))
+            if (!IsDiagramRequest(request))
             {
                 return false;
             }
@@ -490,19 +493,19 @@ namespace AB.MDV
             return texture.LoadImage(imageData, true) ? texture : null;
         }
 
-        private static bool ShouldAdvanceMermaidRequest(ImageRequest request)
+        private static bool ShouldAdvanceDiagramRequest(ImageRequest request)
         {
-            return IsMermaidDiagram(request) && request.CanAdvance;
+            return IsDiagramRequest(request) && request.CanAdvance;
         }
 
         private static double GetRetryDelaySeconds(ImageRequest request)
         {
-            return IsTransientMermaidFailure(request) ? MermaidRetryDelaySeconds : 0.0d;
+            return IsTransientDiagramFailure(request) ? DiagramRetryDelaySeconds : 0.0d;
         }
 
-        private void AdvanceMermaidRequest(ImageRequest request, double delaySeconds)
+        private void AdvanceDiagramRequest(ImageRequest request, double delaySeconds)
         {
-            // CHANGED: Mermaid diagrams now advance through retries and backup render services instead of failing permanently on the first outage.
+            // Diagram requests advance through retries and backup render services instead of failing permanently on the first outage.
             ImageRequest retryRequest = request.CreateNext(delaySeconds);
             mActiveRequests.Add(retryRequest);
             mTextureCache[request.CacheKey] = mPlaceholder;
@@ -511,15 +514,15 @@ namespace AB.MDV
 
         private static string GetDiskCachePath(MarkdownImageRequest request)
         {
-            return Path.Combine(MarkdownPreferences.MermaidDiskCacheDirectory, $"{request.CacheKey}.png");
+            return Path.Combine(MarkdownPreferences.DiagramDiskCacheDirectory, $"{request.CacheKey}.png");
         }
 
         private static bool CanUseDiskCache(MarkdownImageRequest request)
         {
             return request != null
                 && request.EnableDiskCache
-                && request.Kind == MarkdownImageRequestKind.MermaidDiagram
-                && MarkdownPreferences.MermaidDiskCacheEnabled;
+                && IsDiagramRequestKind(request.Kind)
+                && MarkdownPreferences.DiagramDiskCacheEnabled;
         }
 
         private bool TryLoadDiskCache(MarkdownImageRequest request, out Texture texture)
@@ -539,13 +542,13 @@ namespace AB.MDV
 
             try
             {
-                // CHANGED: Successful Mermaid renders are persisted so charts can reopen instantly without another network round-trip.
+                // Successful diagram renders are persisted so charts can reopen instantly without another network round-trip.
                 texture = CreateTexture(File.ReadAllBytes(cachePath));
                 return texture != null;
             }
             catch (Exception exception)
             {
-                Debug.LogWarning($"Failed to read Mermaid diagram cache '{cachePath}': {exception.Message}");
+                Debug.LogWarning($"Failed to read diagram cache '{cachePath}': {exception.Message}");
                 return false;
             }
         }
@@ -565,8 +568,21 @@ namespace AB.MDV
             }
             catch (Exception exception)
             {
-                WarnOnce(request.CacheKey, $"Mermaid diagram cache could not be written: {exception.Message}");
+                WarnOnce(request.CacheKey, $"Diagram cache could not be written: {exception.Message}");
             }
+        }
+
+        private static bool IsDiagramRequestKind(MarkdownImageRequestKind kind)
+        {
+            return kind == MarkdownImageRequestKind.MermaidDiagram
+                || kind == MarkdownImageRequestKind.PlantUmlDiagram;
+        }
+
+        private static string GetDiagramDisplayLabel(ImageRequest request)
+        {
+            return request.Kind == MarkdownImageRequestKind.PlantUmlDiagram
+                ? "PlantUML diagram"
+                : "Mermaid diagram";
         }
 
         private void WarnOnce(string cacheKey, string message)

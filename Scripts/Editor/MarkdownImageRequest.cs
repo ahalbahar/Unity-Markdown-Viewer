@@ -3,7 +3,7 @@
 // Purpose: Describes remote image requests with fallback candidates.
 // Author:  Ahmad Albahar
 // Created: 2026-04-19
-// Notes:   Used for Mermaid chart rendering, caching, and fallback endpoints.
+// Notes:   Used for diagram rendering, caching, and fallback endpoints.
 // ============================================================
 
 using System;
@@ -25,6 +25,11 @@ namespace AB.MDV
         /// A rendered Mermaid diagram with service fallback and optional disk caching.
         /// </summary>
         MermaidDiagram,
+
+        /// <summary>
+        /// A rendered PlantUML diagram with service fallback and optional disk caching.
+        /// </summary>
+        PlantUmlDiagram,
     }
 
     /// <summary>

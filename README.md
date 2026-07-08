@@ -1,12 +1,12 @@
 # Unity Markdown Viewer for Unity Editor
 
-> A Unity Markdown viewer and Unity Editor markdown inspector for `.md` and `.markdown` files, with syntax highlighting, themed Mermaid diagrams, preview expansion, anchor links, tables, images, GIF support, and project documentation workflows.
+> A Unity Markdown viewer and Unity Editor markdown inspector for `.md` and `.markdown` files, with syntax highlighting, themed Mermaid and PlantUML diagrams, preview expansion, anchor links, tables, images, GIF support, and project documentation workflows.
 
 ## Overview
 
 Unity Markdown Viewer is a Unity Editor plugin that renders Markdown files directly inside the Unity Inspector. It is designed for teams that keep game documentation, technical design docs, README files, changelogs, onboarding notes, and editor help content inside a Unity project.
 
-This package is a complete rewrite and significant enhancement of the original [UnityMarkdownViewer](https://github.com/gwaredd/UnityMarkdownViewer) project. It provides a polished Markdown reader for Unity, with theme customization, syntax highlighting, Mermaid diagrams, anchor navigation, admonitions, images, GIF support, expandable diagram previews, and a workflow that fits real Unity projects.
+This package is a complete rewrite and significant enhancement of the original [UnityMarkdownViewer](https://github.com/gwaredd/UnityMarkdownViewer) project. It provides a polished Markdown reader for Unity, with theme customization, syntax highlighting, Mermaid and PlantUML diagrams, anchor navigation, admonitions, images, GIF support, expandable diagram previews, and a workflow that fits real Unity projects.
 
 **Perfect for:**
 - Displaying project documentation and guides
@@ -28,9 +28,9 @@ Unity markdown viewer, Unity markdown editor, Unity markdown inspector, Unity RE
 - 😀 **Emoji Support Across Unity Versions** – Unity 6 uses native emoji rendering, while Unity versions older than Unity 6 use a configurable CDN image source chain
 - 🏷️ **GitHub-style Admonitions** – `> [!NOTE]`, `[!TIP]`, `[!WARNING]`, `[!IMPORTANT]`, `[!CAUTION]`
 - 🎯 **Heading IDs** – Custom anchor IDs with `{#custom-id}` syntax
-- 📊 **Mermaid Diagrams** – Fenced `mermaid` blocks render as inline diagrams in the Inspector with theme-aware colors
-- ↔️ **Wide Diagram Scrolling** – Mermaid charts can scroll horizontally when they exceed the Inspector width
-- 🔍 **Diagram Preview Window** – Each Mermaid chart includes an `Expand` button that opens a dedicated preview window with zoom and pan
+- 📊 **Mermaid and PlantUML Diagrams** – Fenced `mermaid`, `plantuml`, `puml`, and `uml` blocks render as inline diagrams in the Inspector
+- ↔️ **Wide Diagram Scrolling** – Rendered charts can scroll horizontally when they exceed the Inspector width
+- 🔍 **Diagram Preview Window** – Each rendered chart includes an `Expand` button that opens a dedicated preview window with zoom and pan
 
 ### 🎨 Syntax Highlighting
 - **Multi-language support** – C#, HLSL, JavaScript, Python, Java, Go, Rust, CSS, HTML, YAML, and more
@@ -52,8 +52,8 @@ Unity markdown viewer, Unity markdown editor, Unity markdown inspector, Unity RE
 - **Code block syntax** – Specify language for proper highlighting (e.g., ` ```csharp `)
 - **Table rendering** – Full support for GitHub-style Markdown tables
 - **Escape sequences** – Raw text mode toggles markdown/plaintext view
-- **Mermaid image rendering** – Mermaid fences are converted into rendered diagrams through Mermaid Ink with Kroki fallback while keeping the raw source available in raw view
-- **Mermaid disk cache** – Successful diagram renders are cached under the Unity project `Library` or `Temp` folder and can be configured in preferences
+- **Diagram image rendering** – Mermaid fences render through Mermaid Ink with Kroki fallback, while PlantUML fences render through the PlantUML server with Kroki fallback
+- **Diagram disk cache** – Successful diagram renders are cached under the Unity project `Library` or `Temp` folder and can be configured in preferences
 
 ## Current Highlights
 
@@ -70,6 +70,7 @@ This is a comprehensive rewrite with **nearly 100% new code**, built from the gr
 | **Theme Editor UI** | ❌ | ✅ Visual side-by-side editor |
 | **Markdig Parser** | ✅ | ✅ Enhanced integration |
 | **Mermaid Diagrams** | ❌ | ✅ Inline render, expand preview, zoom/pan, cache, fallback |
+| **PlantUML Diagrams** | ❌ | ✅ Inline render, expand preview, zoom/pan, cache, fallback |
 
 ## Installation
 
@@ -227,7 +228,26 @@ Mermaid behavior in formatted view:
 - wide charts gain horizontal scrolling inside the Inspector instead of being clipped
 - each chart exposes an `Expand` button that opens a standalone preview window
 - the preview window supports mouse-wheel zoom, toolbar zoom controls, and drag panning
-- Mermaid disk caching can be configured in `Preferences > AB > Markdown`
+- diagram disk caching can be configured in `Preferences > AB > Markdown`
+
+#### PlantUML Diagrams
+````markdown
+```plantuml
+@startuml
+Alice -> Bob: Authentication request
+Bob --> Alice: Authentication response
+@enduml
+```
+````
+
+The viewer also recognizes `puml` and `uml` fenced blocks as PlantUML. PlantUML diagrams render through the [PlantUML server](https://plantuml.com/server) with a fallback request to [Kroki](https://kroki.io/), so the formatted view needs network access the first time a diagram is requested. Successful renders use the same disk cache and preview window as Mermaid diagrams.
+
+PlantUML behavior in formatted view:
+- standard `@startuml` diagrams receive theme-aware `skinparam` colors for backgrounds, text, borders, arrows, participants, classes, components, packages, notes, activities, states, databases, and use cases
+- non-`@startuml` PlantUML starts such as `@startmindmap` render without injected styling so specialized PlantUML formats are not broken
+- shorthand PlantUML sequence blocks without explicit `@startuml` and `@enduml` tags are accepted by the remote renderers
+- wide diagrams gain horizontal scrolling inside the Inspector instead of being clipped
+- each diagram exposes an `Expand` button with source and preview tabs
 
 #### Tables
 ```markdown
@@ -325,8 +345,9 @@ Edit `SyntaxHighlighter.cs` to add new language patterns or color schemes.
 | Markdown doesn't display | Ensure file extension is `.md` or `.markdown` |
 | Images don't load | Check relative paths; absolute paths use project root |
 | Mermaid diagrams show fallback text | Mermaid diagrams are fetched from Mermaid Ink with Kroki fallback in formatted view, so verify network access and the fenced block syntax |
-| Mermaid diagrams look stale after editing | Clear the Mermaid disk cache folder shown in `Preferences > AB > Markdown` or disable/re-enable disk cache to force a fresh render |
-| A wide Mermaid chart looks clipped | Use the horizontal scroll area inside the Inspector or click `Expand` to open the dedicated preview window |
+| PlantUML diagrams show fallback text | PlantUML diagrams are fetched from the PlantUML server with Kroki fallback in formatted view, so verify network access and the fenced block syntax |
+| Diagrams look stale after editing | Clear the diagram disk cache folder shown in `Preferences > AB > Markdown` or disable/re-enable disk cache to force a fresh render |
+| A wide diagram looks clipped | Use the horizontal scroll area inside the Inspector or click `Expand` to open the dedicated preview window |
 | Diagram preview navigation feels stuck | Use mouse wheel or the toolbar buttons to zoom, then middle-mouse drag or `Alt+Left Drag` to pan |
 | Emoji look missing or monochrome on Unity versions older than Unity 6 | Use the formatted markdown view and verify the `MarkdownTheme` emoji source chain foldout; pre-Unity-6 editors fetch emoji through the configured CDN sources and need network access on first load |
 | Anchor links don't scroll | Ensure heading has proper ID (auto-generated or `{#id}`) |

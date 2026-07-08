@@ -12,7 +12,6 @@ namespace AB.MDV.Renderer
     /// <summary>
     /// Renders an <see cref="HtmlEntityInline"/> into the layout.
     /// Converts transcoded HTML entities into their literal text representation.
-    /// Respects the global preference for stripping HTML content.
     /// </summary>
     public class RendererInlineHtmlEntity : MarkdownObjectRenderer<RendererMarkdown, HtmlEntityInline>
     {
@@ -23,10 +22,7 @@ namespace AB.MDV.Renderer
         /// <param name="node">The HTML entity inline node.</param>
         protected override void Write(RendererMarkdown renderer, HtmlEntityInline node)
         {
-            if (!MarkdownPreferences.StripHTML)
-            {
-                renderer.Text(node.Transcoded.ToString());
-            }
+            renderer.Text(node.Transcoded.ToString());
         }
     }
 }

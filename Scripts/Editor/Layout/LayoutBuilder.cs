@@ -169,7 +169,7 @@ namespace AB.MDV.Layout
                 throw new System.ArgumentNullException(nameof(imageRequest));
             }
 
-            // CHANGED: Mermaid blocks now use a dedicated block so wide charts can scroll horizontally and pop out.
+            // Diagram blocks use a dedicated block so wide charts can scroll horizontally and pop out.
             Space();
             AddBlock(new BlockDiagram(mIndent, imageRequest, source, title));
             Space();

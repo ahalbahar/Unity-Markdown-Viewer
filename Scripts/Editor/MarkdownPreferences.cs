@@ -12,7 +12,7 @@ using UnityEngine;
 namespace AB.MDV
 {
     /// <summary>
-    /// Selects where Mermaid diagram images are cached on disk.
+    /// Selects where rendered diagram images are cached on disk.
     /// </summary>
     public enum MermaidCacheStorageLocation
     {
@@ -82,19 +82,19 @@ namespace AB.MDV
         public static MarkdownTheme ActiveTheme => MarkdownTheme.Instance;
 
         /// <summary>
-        /// Gets a value indicating whether Mermaid diagrams should be cached on disk.
+        /// Gets a value indicating whether rendered diagrams should be cached on disk.
         /// </summary>
-        public static bool MermaidDiskCacheEnabled { get { LoadPrefs(); return mMermaidDiskCacheEnabled; } }
+        public static bool DiagramDiskCacheEnabled { get { LoadPrefs(); return mMermaidDiskCacheEnabled; } }
 
         /// <summary>
-        /// Gets the selected Mermaid disk cache storage location.
+        /// Gets the selected rendered-diagram disk cache storage location.
         /// </summary>
-        public static MermaidCacheStorageLocation MermaidDiskCacheLocation { get { LoadPrefs(); return mMermaidDiskCacheLocation; } }
+        public static MermaidCacheStorageLocation DiagramDiskCacheLocation { get { LoadPrefs(); return mMermaidDiskCacheLocation; } }
 
         /// <summary>
-        /// Gets the resolved Mermaid diagram cache directory inside the current Unity project.
+        /// Gets the resolved rendered-diagram cache directory inside the current Unity project.
         /// </summary>
-        public static string MermaidDiskCacheDirectory
+        public static string DiagramDiskCacheDirectory
         {
             get
             {
@@ -105,6 +105,21 @@ namespace AB.MDV
                 return Path.Combine(projectRoot, rootFolder, "AB", "Unity-Markdown-Viewer", "DiagramCache");
             }
         }
+
+        /// <summary>
+        /// Gets a value indicating whether Mermaid diagrams should be cached on disk.
+        /// </summary>
+        public static bool MermaidDiskCacheEnabled => DiagramDiskCacheEnabled;
+
+        /// <summary>
+        /// Gets the selected Mermaid disk cache storage location.
+        /// </summary>
+        public static MermaidCacheStorageLocation MermaidDiskCacheLocation => DiagramDiskCacheLocation;
+
+        /// <summary>
+        /// Gets the resolved Mermaid diagram cache directory inside the current Unity project.
+        /// </summary>
+        public static string MermaidDiskCacheDirectory => DiagramDiskCacheDirectory;
 
         private static void LoadPrefs()
         {
@@ -214,14 +229,14 @@ namespace AB.MDV
             }
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Mermaid Diagrams", EditorStyles.boldLabel);
-            // CHANGED: Mermaid rendering now supports persistent disk caching with a configurable project-local storage folder.
+            EditorGUILayout.LabelField("Diagrams", EditorStyles.boldLabel);
+            // CHANGED: Diagram rendering supports persistent disk caching with a configurable project-local storage folder.
             mMermaidDiskCacheEnabled = EditorGUILayout.Toggle("Enable Disk Cache", mMermaidDiskCacheEnabled);
             mMermaidDiskCacheLocation = (MermaidCacheStorageLocation)EditorGUILayout.EnumPopup("Cache Location", mMermaidDiskCacheLocation);
 
             using (new EditorGUI.DisabledScope(true))
             {
-                EditorGUILayout.TextField("Cache Folder", MermaidDiskCacheDirectory);
+                EditorGUILayout.TextField("Cache Folder", DiagramDiskCacheDirectory);
             }
 
             if (EditorGUI.EndChangeCheck())

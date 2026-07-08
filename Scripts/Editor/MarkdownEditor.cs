@@ -34,8 +34,20 @@ namespace AB.MDV
         private MarkdownViewer mViewer;
         private IMGUIContainer mIMGUI;
         private ScrollView mInspectorScrollView;
+        private Editor mDefaultEditor;
+        private bool mShowOriginalInspector;
 
         private static readonly List<string> mExtensions = new List<string> { ".md", ".markdown" };
+        private static readonly GUIContent[] mInspectorViewLabels =
+        {
+            new GUIContent("Rendered", "Show the rendered markdown preview."),
+            new GUIContent("Original", "Show Unity's original TextAsset Inspector.")
+        };
+
+        private const string InspectorViewSessionKey = "AB.MDV.MarkdownEditor.ShowOriginalInspector";
+        private const float InspectorViewSwitchWidth = 156.0f;
+        private const float InspectorViewSwitchPadding = 8.0f;
+        private const float InspectorViewSwitchTop = 4.0f;
 
         /// <summary>
         /// Initializes the markdown viewer if the target asset has a supported extension.
@@ -54,6 +66,7 @@ namespace AB.MDV
 
             if (mExtensions.Contains(ext))
             {
+                mShowOriginalInspector = SessionState.GetBool(InspectorViewSessionKey, false);
                 mViewer = new MarkdownViewer(MarkdownPreferences.DarkSkin ? SkinDark : SkinLight, path, content);
                 EditorApplication.update += UpdateRequests;
             }
@@ -72,6 +85,12 @@ namespace AB.MDV
 
             mIMGUI = null;
             mInspectorScrollView = null;
+
+            if (mDefaultEditor != null)
+            {
+                DestroyImmediate(mDefaultEditor);
+                mDefaultEditor = null;
+            }
         }
 
         /// <summary>
@@ -135,13 +154,7 @@ namespace AB.MDV
                 return new IMGUIContainer(DrawDefaultEditor);
             }
 
-            mIMGUI = new IMGUIContainer(() =>
-            {
-                if (mViewer != null)
-                {
-                    mViewer.Draw();
-                }
-            });
+            mIMGUI = new IMGUIContainer(DrawEditor);
 
             mIMGUI.style.flexShrink = 0;
             return mIMGUI;
@@ -167,8 +180,6 @@ namespace AB.MDV
 #endif
         }
 
-        private Editor mDefaultEditor;
-
         /// <summary>
         /// Draws either the markdown viewer or the default text asset editor.
         /// </summary>
@@ -176,12 +187,46 @@ namespace AB.MDV
         {
             if (mViewer != null)
             {
-                mViewer.Draw();
+                if (mShowOriginalInspector)
+                {
+                    GUILayout.Space(EditorGUIUtility.singleLineHeight + InspectorViewSwitchTop + InspectorViewSwitchPadding);
+                    DrawDefaultEditor();
+                }
+                else
+                {
+                    mViewer.Draw(InspectorViewSwitchWidth + InspectorViewSwitchPadding);
+                }
+
+                DrawInspectorViewSwitch();
             }
             else
             {
                 DrawDefaultEditor();
             }
+        }
+
+        /// <summary>
+        /// Draws the Inspector view switch as an overlay in the top-right corner.
+        /// </summary>
+        private void DrawInspectorViewSwitch()
+        {
+            var width = Mathf.Min(InspectorViewSwitchWidth, Mathf.Max(0.0f, EditorGUIUtility.currentViewWidth - InspectorViewSwitchPadding * 2.0f));
+            var rect = new Rect(
+                EditorGUIUtility.currentViewWidth - width - InspectorViewSwitchPadding,
+                InspectorViewSwitchTop,
+                width,
+                EditorGUIUtility.singleLineHeight + 2.0f);
+
+            var selected = mShowOriginalInspector ? 1 : 0;
+            var next = GUI.Toolbar(rect, selected, mInspectorViewLabels, EditorStyles.toolbarButton);
+            if (next == selected)
+            {
+                return;
+            }
+
+            mShowOriginalInspector = next == 1;
+            SessionState.SetBool(InspectorViewSessionKey, mShowOriginalInspector);
+            Repaint();
         }
 
         /// <summary>
@@ -201,6 +246,10 @@ namespace AB.MDV
             if (mDefaultEditor != null)
             {
                 mDefaultEditor.OnInspectorGUI();
+            }
+            else
+            {
+                base.OnInspectorGUI();
             }
         }
     }
